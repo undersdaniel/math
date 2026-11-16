@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>五年級數學：聰明算分數比大小</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Google Fonts Noto Sans TC -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0f7ff;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* 標準上下橫線分數樣式 */
+        .frac {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 3px;
+            font-weight: 700;
+            line-height: 1.05;
+        }
+        .frac-num {
+            padding: 0 4px;
+            border-bottom: 2.5px solid currentColor;
+            text-align: center;
+            min-width: 1.2em;
+        }
+        .frac-den {
+            padding: 1px 4px 0;
+            text-align: center;
+            min-width: 1.2em;
+        }
+        .mixed-frac {
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            font-weight: 700;
+        }
+        .mixed-whole {
+            font-size: 1.35em;
+            margin-right: 2px;
+        }
+
+        /* 大尺寸分數樣式（用於卡片與迷宮） */
+        .frac-lg .frac-num { border-bottom-width: 3px; font-size: 1.35rem; }
+        .frac-lg .frac-den { font-size: 1.35rem; }
+        .frac-lg .mixed-whole { font-size: 1.8rem; }
+
+        /* 動畫效果 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .animate-shake {
+            animation: shake 0.45s ease-in-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            70% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* 拖曳與選取高亮 */
+        .card-selected {
+            box-shadow: 0 0 0 4px #f59e0b, 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px) scale(1.03);
+        }
+        .dropzone-hover {
+            background-color: #fef3c7 !important;
+            border-color: #f59e0b !important;
+            transform: scale(1.01);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800">
+
+    <!-- 頂部導覽列 -->
+    <header class="bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-500 text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-3 py-2.5 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl sm:text-3xl">🧠</span>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-black tracking-wide leading-tight">聰明算！分數比大小互動網</h1>
+                    <p class="text-xs text-blue-100 hidden sm:block">五年級數學：不用通分比較異分母分數的大小</p>
+                </div>
+            </div>
+
+            <!-- 口訣小抄按鈕 -->
+            <div class="flex items-center gap-2">
+                <button onclick="toggleCheatSheet(true)" class="bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-900 px-3.5 py-1.5 rounded-xl text-sm sm:text-base font-black shadow-md flex items-center gap-1.5 transition">
+                    <span>📜</span><span>三招口訣小抄</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 六大關卡分頁按鈕（包含 0.通分暖身） -->
+        <nav class="bg-indigo-900/40 backdrop-blur-sm border-t border-white/15">
+            <div class="max-w-6xl mx-auto px-2 py-1.5 grid grid-cols-6 gap-1 sm:gap-2">
+                <button onclick="switchTab(0)" id="tab-btn-0" class="tab-btn py-2 px-1 sm:px-2 rounded-xl font-bold text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-center gap-1 transition bg-white text-indigo-700 shadow">
+                    <span>🔥</span><span>0.通分暖身</span>
+                </button>
+                <button onclick="switchTab(1)" id="tab-btn-1" class="tab-btn py-2 px-1 sm:px-2 rounded-xl font-bold text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-center gap-1 transition text-white hover:bg-white/15">
+                    <span>🔍</span><span>1.圖形探究</span>
+                </button>
+                <button onclick="switchTab(2)" id="tab-btn-2" class="tab-btn py-2 px-1 sm:px-2 rounded-xl font-bold text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-center gap-1 transition text-white hover:bg-white/15">
+                    <span>🗂️</span><span>2.判斷方式</span>
+                </button>
+                <button onclick="switchTab(3)" id="tab-btn-3" class="tab-btn py-2 px-1 sm:px-2 rounded-xl font-bold text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-center gap-1 transition text-white hover:bg-white/15">
+                    <span>📊</span><span>3.排排站</span>
+                </button>
+                <button onclick="switchTab(4)" id="tab-btn-4" class="tab-btn py-2 px-1 sm:px-2 rounded-xl font-bold text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-center gap-1 transition text-white hover:bg-white/15">
+                    <span>🏰</span><span>4.迷宮挑戰</span>
+                </button>
+                <button onclick="switchTab(5)" id="tab-btn-5" class="tab-btn py-2 px-1 sm:px-2 rounded-xl font-bold text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-center gap-1 transition text-white hover:bg-white/15">
+                    <span>📝</span><span>5.課後小測驗</span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 主內容區 -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-3 sm:p-5">
+
+        <!-- ========================================================= -->
+        <!-- 關卡零：5分鐘通分暖身複習 -->
+        <!-- ========================================================= -->
+        <section id="stage-0" class="stage-panel space-y-4">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-indigo-100 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-lg sm:text-xl font-black text-indigo-800">🔥 5 分鐘通分暖身：複習用「通分」比較分數大小</h2>
+                    <p class="text-xs sm:text-sm text-slate-600">先複習上一節的通分步驟：<b>找公倍數 ➔ 擴分成同分母 ➔ 比較分子大小</b>！</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="loadWarmup(0)" id="warmup-btn-0" class="warmup-btn bg-indigo-600 text-white font-bold px-3.5 py-2 rounded-xl text-xs sm:text-sm shadow">暖身① 2/3 和 3/5</button>
+                    <button onclick="loadWarmup(1)" id="warmup-btn-1" class="warmup-btn bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold px-3.5 py-2 rounded-xl text-xs sm:text-sm">暖身② 5/6 和 7/8</button>
+                    <button onclick="loadWarmup(2)" id="warmup-btn-2" class="warmup-btn bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold px-3.5 py-2 rounded-xl text-xs sm:text-sm">暖身③ 2又3/10 和 2又3/8</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border-2 border-indigo-200 space-y-5">
+                <!-- 題目展示 -->
+                <div class="flex flex-col items-center justify-center bg-indigo-50/70 rounded-2xl p-4 border border-indigo-100">
+                    <div class="text-xs font-black text-indigo-600 mb-2" id="warmup-tag">暖身題 ①：基礎異分母真分數</div>
+                    <div class="flex items-center gap-4 text-slate-900">
+                        <div id="warmup-orig-l"></div>
+                        <span class="text-2xl font-black text-slate-400">和</span>
+                        <div id="warmup-orig-r"></div>
+                        <span class="text-base sm:text-lg font-black text-slate-700">哪一個比較大？</span>
+                    </div>
+                </div>
+
+                <!-- 步驟 1：選公分母 -->
+                <div class="space-y-2.5">
+                    <div class="flex items-center gap-2 font-black text-slate-800 text-sm sm:text-base">
+                        <span class="w-6 h-6 rounded-full bg-sky-600 text-white text-xs flex items-center justify-center">1</span>
+                        <span id="warmup-s1-prompt">先找出兩個分母的公倍數當作「公分母」：</span>
+                    </div>
+                    <div id="warmup-lcd-opts" class="flex flex-wrap gap-2.5 pl-8"></div>
+                </div>
+
+                <!-- 步驟 2：擴分過程 -->
+                <div id="warmup-s2-box" class="hidden space-y-3 pt-3 border-t border-slate-100 animate-pop">
+                    <div class="flex items-center gap-2 font-black text-slate-800 text-sm sm:text-base">
+                        <span class="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center">2</span>
+                        <span>把兩個分數都擴分成同分母分數：</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pl-0 sm:pl-8">
+                        <div id="warmup-exp-l" class="bg-sky-50 border border-sky-200 rounded-2xl p-3.5 flex items-center justify-center gap-2 text-base sm:text-lg font-bold text-slate-800"></div>
+                        <div id="warmup-exp-r" class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 flex items-center justify-center gap-2 text-base sm:text-lg font-bold text-slate-800"></div>
+                    </div>
+                </div>
+
+                <!-- 步驟 3：填入大小符號 -->
+                <div id="warmup-s3-box" class="hidden space-y-3 pt-3 border-t border-slate-100 animate-pop">
+                    <div class="flex items-center gap-2 font-black text-slate-800 text-sm sm:text-base">
+                        <span class="w-6 h-6 rounded-full bg-amber-500 text-slate-900 text-xs flex items-center justify-center">3</span>
+                        <span>分母一樣了！比比看分子，點選 ＞、＜ 或 ＝：</span>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-center gap-4 bg-amber-50/70 border border-amber-200 rounded-2xl p-4">
+                        <div id="warmup-fin-l"></div>
+                        <span id="warmup-fin-box" class="w-12 h-12 rounded-xl border-2 border-amber-500 bg-white flex items-center justify-center text-2xl font-black text-amber-700 shadow-inner">？</span>
+                        <div id="warmup-fin-r"></div>
+                        <div class="flex gap-2 ml-2">
+                            <button onclick="checkWarmupSym('>')" class="w-12 h-12 rounded-xl bg-white hover:bg-amber-100 border-2 border-amber-400 font-black text-xl active:scale-95">＞</button>
+                            <button onclick="checkWarmupSym('<')" class="w-12 h-12 rounded-xl bg-white hover:bg-amber-100 border-2 border-amber-400 font-black text-xl active:scale-95">＜</button>
+                            <button onclick="checkWarmupSym('=')" class="w-12 h-12 rounded-xl bg-white hover:bg-amber-100 border-2 border-amber-400 font-black text-xl active:scale-95">＝</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 暖身總結回饋 -->
+                <div id="warmup-fb-box" class="hidden rounded-2xl p-4 border-2 font-bold text-sm sm:text-base">
+                    <span id="warmup-fb-text"></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- 關卡一：互動圖解探究（視覺比較器） -->
+        <!-- ========================================================= -->
+        <section id="stage-1" class="stage-panel hidden space-y-4">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-indigo-100 space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <h2 class="text-lg sm:text-xl font-black text-indigo-800">🔍 視覺圖形探究：不用通分怎麼比？</h2>
+                        <p class="text-xs sm:text-sm text-slate-600">點選下方探究題組，或自由調整分子、分母，觀察塗色面積直接看出誰比較大！</p>
+                    </div>
+                    <!-- 圖形切換按鈕 -->
+                    <div class="flex bg-slate-100 p-1 rounded-xl">
+                        <button onclick="setShape('pie')" id="shape-pie-btn" class="px-3.5 py-1.5 rounded-lg font-bold text-sm bg-indigo-600 text-white shadow transition">🥧 圓餅圖</button>
+                        <button onclick="setShape('bar')" id="shape-bar-btn" class="px-3.5 py-1.5 rounded-lg font-bold text-sm text-slate-600 hover:text-slate-900 transition">🍫 長條圖</button>
+                    </div>
+                </div>
+
+                <!-- 探究題組快捷鍵列 -->
+                <div class="flex flex-wrap items-center gap-2 pt-1">
+                    <span class="text-xs font-black text-slate-500">🎯 探究任務：</span>
+                    <button onclick="loadPreset(1, 5, 1, 3, 'ex1')" class="bg-sky-50 hover:bg-sky-100 border border-sky-300 text-sky-900 font-bold px-3 py-1.5 rounded-xl text-xs sm:text-sm transition">任務① 1/5 和 1/3</button>
+                    <button onclick="loadPreset(2, 7, 2, 5, 'ex2')" class="bg-sky-50 hover:bg-sky-100 border border-sky-300 text-sky-900 font-bold px-3 py-1.5 rounded-xl text-xs sm:text-sm transition">任務② 2/7 和 2/5</button>
+                    <button onclick="loadPreset(7, 6, 9, 8, 'ex3')" class="bg-purple-50 hover:bg-purple-100 border border-purple-300 text-purple-900 font-bold px-3 py-1.5 rounded-xl text-xs sm:text-sm transition">任務③ 7/6 和 9/8</button>
+                    <button onclick="loadPreset(5, 6, 7, 8, 'ex4')" class="bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 font-bold px-3 py-1.5 rounded-xl text-xs sm:text-sm transition">任務④ 5/6 和 7/8</button>
+                    <button onclick="loadPreset(5, 12, 4, 7, 'ex5')" class="bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 font-bold px-3 py-1.5 rounded-xl text-xs sm:text-sm transition">任務⑤ 5/12 和 4/7</button>
+                </div>
+
+                <!-- 輔助顯示開關 -->
+                <div class="flex flex-wrap items-center gap-4 pt-2 border-t border-slate-100 text-xs sm:text-sm font-bold text-slate-700">
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" id="toggleHalfLine" onchange="renderVisualStage()" checked class="w-4 h-4 accent-amber-500 rounded">
+                        <span>📏 顯示「一半（1/2）」基準線</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" id="toggleGapHighlight" onchange="renderVisualStage()" class="w-4 h-4 accent-rose-500 rounded">
+                        <span>🧩 高亮「距離 1 的差距」</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" id="toggleMixedFormat" onchange="renderVisualStage()" class="w-4 h-4 accent-purple-600 rounded">
+                        <span>🔄 假分數顯示為帶分數</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 互動發現填空卡 -->
+            <div id="elf-discovery-box" class="hidden bg-amber-50 border-2 border-amber-300 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                <div class="flex items-center gap-2.5 text-sm sm:text-base font-bold text-slate-800">
+                    <span class="text-2xl">🧚‍♂️</span>
+                    <div>
+                        觀察任務 ① 和 ② 的結果：分子相同時，分母越大（平分越多份），分數就越
+                        <span id="elf-blank-slot" class="inline-block min-w-[3.5rem] text-center px-2.5 py-0.5 mx-1 rounded-lg border-2 border-dashed border-amber-500 bg-white font-black text-amber-700">？</span>！
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="checkElfBlank('大')" class="bg-white hover:bg-amber-100 border-2 border-amber-400 font-black px-5 py-1.5 rounded-xl text-base">大</button>
+                    <button onclick="checkElfBlank('小')" class="bg-white hover:bg-amber-100 border-2 border-amber-400 font-black px-5 py-1.5 rounded-xl text-base">小</button>
+                </div>
+            </div>
+
+            <!-- 左右雙分數視覺對比舞台 -->
+            <div class="grid grid-cols-1 md:grid-cols-11 gap-4 items-center">
+                <!-- 左側分數卡片 -->
+                <div class="md:col-span-5 bg-white rounded-3xl p-4 sm:p-5 shadow-md border-2 border-sky-200 flex flex-col items-center space-y-3">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="text-xs font-black bg-sky-100 text-sky-800 px-2.5 py-1 rounded-lg">左邊分數</span>
+                        <div id="left-frac-display" class="text-sky-900"></div>
+                    </div>
+
+                    <div id="left-visual-box" class="min-h-[195px] flex items-center justify-center w-full py-2"></div>
+
+                    <!-- 微調按鈕 -->
+                    <div class="grid grid-cols-2 gap-2 w-full pt-2 border-t border-slate-100 text-xs sm:text-sm font-bold">
+                        <div class="flex items-center justify-between bg-slate-50 px-2.5 py-1.5 rounded-xl">
+                            <span>分子：<b id="left-num-val" class="text-sky-700">1</b></span>
+                            <div class="flex gap-1">
+                                <button onclick="adjustFrac('left', 'num', -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-300 font-black active:scale-90">-</button>
+                                <button onclick="adjustFrac('left', 'num', 1)" class="w-7 h-7 rounded-lg bg-white border border-slate-300 font-black active:scale-90">+</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between bg-slate-50 px-2.5 py-1.5 rounded-xl">
+                            <span>分母：<b id="left-den-val" class="text-sky-700">5</b></span>
+                            <div class="flex gap-1">
+                                <button onclick="adjustFrac('left', 'den', -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-300 font-black active:scale-90">-</button>
+                                <button onclick="adjustFrac('left', 'den', 1)" class="w-7 h-7 rounded-lg bg-white border border-slate-300 font-black active:scale-90">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 中央比較符號 -->
+                <div class="md:col-span-1 flex flex-col items-center justify-center gap-2">
+                    <div onclick="toggleRevealSymbol()" id="compare-symbol-badge" title="點擊切換顯示或隱藏大小符號" class="w-16 h-16 rounded-2xl bg-slate-700 text-white shadow-lg flex items-center justify-center text-3xl font-black border-4 border-white cursor-pointer transition active:scale-95">?</div>
+                    <button onclick="toggleRevealSymbol()" id="reveal-btn" class="text-xs font-bold text-indigo-600 hover:underline whitespace-nowrap">顯示大小符號</button>
+                </div>
+
+                <!-- 右側分數卡片 -->
+                <div class="md:col-span-5 bg-white rounded-3xl p-4 sm:p-5 shadow-md border-2 border-emerald-200 flex flex-col items-center space-y-3">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="text-xs font-black bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-lg">右邊分數</span>
+                        <div id="right-frac-display" class="text-emerald-900"></div>
+                    </div>
+
+                    <div id="right-visual-box" class="min-h-[195px] flex items-center justify-center w-full py-2"></div>
+
+                    <!-- 微調按鈕 -->
+                    <div class="grid grid-cols-2 gap-2 w-full pt-2 border-t border-slate-100 text-xs sm:text-sm font-bold">
+                        <div class="flex items-center justify-between bg-slate-50 px-2.5 py-1.5 rounded-xl">
+                            <span>分子：<b id="right-num-val" class="text-emerald-700">1</b></span>
+                            <div class="flex gap-1">
+                                <button onclick="adjustFrac('right', 'num', -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-300 font-black active:scale-90">-</button>
+                                <button onclick="adjustFrac('right', 'num', 1)" class="w-7 h-7 rounded-lg bg-white border border-slate-300 font-black active:scale-90">+</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between bg-slate-50 px-2.5 py-1.5 rounded-xl">
+                            <span>分母：<b id="right-den-val" class="text-emerald-700">3</b></span>
+                            <div class="flex gap-1">
+                                <button onclick="adjustFrac('right', 'den', -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-300 font-black active:scale-90">-</button>
+                                <button onclick="adjustFrac('right', 'den', 1)" class="w-7 h-7 rounded-lg bg-white border border-slate-300 font-black active:scale-90">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 智慧觀察提示框（與大小符號顯示/隱藏同步） -->
+            <div class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-3.5 sm:p-4 flex items-start gap-3">
+                <span class="text-2xl">💡</span>
+                <div class="text-sm sm:text-base text-indigo-950 font-bold leading-relaxed" id="visual-insight-text"></div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- 關卡二：判斷方式大分類（Group Sort） -->
+        <!-- ========================================================= -->
+        <section id="stage-2" class="stage-panel hidden space-y-4">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-indigo-100 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-lg sm:text-xl font-black text-indigo-800">🗂️ 判斷方式大分類：這題要用哪一招？</h2>
+                    <p class="text-xs sm:text-sm text-slate-600">先點選一張題卡（或直接拖曳），再點選下方對應的判斷方式箱！答對就會揭曉大小符號喔！</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-50 px-3.5 py-1.5 rounded-xl border border-indigo-200 font-black text-indigo-800 text-sm">
+                        已完成：<span id="sort-progress" class="text-lg text-indigo-600">0</span> / 12
+                    </div>
+                    <button onclick="initSortGame()" class="bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-800 font-bold px-3.5 py-2 rounded-xl text-sm">
+                        🔄 重新洗牌
+                    </button>
+                </div>
+            </div>
+
+            <!-- 即時答題回饋橫幅 -->
+            <div id="sort-feedback" class="hidden rounded-2xl p-3.5 font-bold text-sm sm:text-base transition-all"></div>
+
+            <!-- 待分類題卡池 -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border-2 border-dashed border-slate-300 min-h-[120px]">
+                <div class="text-xs font-black text-slate-400 mb-2 flex items-center justify-between">
+                    <span>👇 待分類分數題卡（點選卡片再點下方箱子，或直接拖曳）</span>
+                    <span id="selected-card-hint" class="text-amber-600 font-bold"></span>
+                </div>
+                <div id="sort-cards-pool" class="flex flex-wrap gap-2.5 sm:gap-3 justify-center"></div>
+            </div>
+
+            <!-- 三個判斷方式目標箱 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- 箱子 1 -->
+                <div onclick="handleBinClick(1)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 1)"
+                     class="sort-bin bg-sky-50 border-3 border-sky-300 rounded-2xl p-3.5 min-h-[220px] flex flex-col cursor-pointer transition hover:border-sky-500">
+                    <div class="bg-sky-600 text-white rounded-xl p-2.5 text-center shadow-sm mb-3">
+                        <div class="font-black text-base sm:text-lg">第 1 招：同分子比大小</div>
+                        <div class="text-xs text-sky-100">分子一樣（或帶分數整數相同）</div>
+                    </div>
+                    <div id="bin-items-1" class="flex-1 flex flex-wrap content-start gap-2"></div>
+                </div>
+
+                <!-- 箱子 2 -->
+                <div onclick="handleBinClick(2)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 2)"
+                     class="sort-bin bg-emerald-50 border-3 border-emerald-300 rounded-2xl p-3.5 min-h-[220px] flex flex-col cursor-pointer transition hover:border-emerald-500">
+                    <div class="bg-emerald-600 text-white rounded-xl p-2.5 text-center shadow-sm mb-3">
+                        <div class="font-black text-base sm:text-lg">第 2 招：跟「1」比差距</div>
+                        <div class="text-xs text-emerald-100">都比 1 少一點（差 1 份或差 2 份）</div>
+                    </div>
+                    <div id="bin-items-2" class="flex-1 flex flex-wrap content-start gap-2"></div>
+                </div>
+
+                <!-- 箱子 3 -->
+                <div onclick="handleBinClick(3)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 3)"
+                     class="sort-bin bg-amber-50 border-3 border-amber-300 rounded-2xl p-3.5 min-h-[220px] flex flex-col cursor-pointer transition hover:border-amber-500">
+                    <div class="bg-amber-500 text-slate-900 rounded-xl p-2.5 text-center shadow-sm mb-3">
+                        <div class="font-black text-base sm:text-lg">第 3 招：看有沒有超過一半</div>
+                        <div class="text-xs text-amber-950">一個超過一半(1/2)，一個不到一半</div>
+                    </div>
+                    <div id="bin-items-3" class="flex-1 flex flex-wrap content-start gap-2"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- 關卡三：分數排排站（互動排序遊戲 Rank Order） -->
+        <!-- ========================================================= -->
+        <section id="stage-3" class="stage-panel hidden space-y-4">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-indigo-100 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-lg sm:text-xl font-black text-indigo-800">📊 數位分數排排站（由小到大）</h2>
+                    <p class="text-xs sm:text-sm text-slate-600">不用通分！請用眼睛觀察特徵並拖曳卡片（或點左右箭頭），將 5 個分數<b>由小到大</b>排好！</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="loadRankLevel('basic')" id="rank-btn-basic" class="rank-mode-btn bg-indigo-600 text-white font-bold px-3.5 py-2 rounded-xl text-sm shadow">
+                        ⭐ 基礎關（真分數挑戰）
+                    </button>
+                    <button onclick="loadRankLevel('challenge')" id="rank-btn-challenge" class="rank-mode-btn bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold px-3.5 py-2 rounded-xl text-sm">
+                        🔥 挑戰關（含大於 1）
+                    </button>
+                    <button onclick="loadRankLevel('random')" id="rank-btn-random" class="rank-mode-btn bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold px-3.5 py-2 rounded-xl text-sm">
+                        🎲 隨機出題
+                    </button>
+                </div>
+            </div>
+
+            <!-- 排序操作區 -->
+            <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-md border-2 border-indigo-200 space-y-5">
+                <div class="flex items-center justify-between text-sm font-black text-slate-500 px-2">
+                    <span class="bg-sky-100 text-sky-800 px-3 py-1 rounded-lg">⬅️ 最小（Least）</span>
+                    <span class="hidden sm:inline text-slate-400">拖曳卡片交換位置，或點擊卡片下方的 ◀ ▶ 移動</span>
+                    <span class="bg-rose-100 text-rose-800 px-3 py-1 rounded-lg">最大（Greatest）➡️</span>
+                </div>
+
+                <!-- 5 張排序卡片容器 -->
+                <div id="rank-slots-container" class="grid grid-cols-5 gap-2 sm:gap-4 items-stretch"></div>
+
+                <!-- 檢查答案按鈕 -->
+                <div class="flex flex-wrap justify-center gap-3 pt-2">
+                    <button onclick="checkRankAnswer()" class="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-black text-base sm:text-lg px-8 py-3 rounded-2xl shadow-lg flex items-center gap-2 transition">
+                        <span>✅</span><span>檢查排列順序</span>
+                    </button>
+                    <button onclick="shuffleCurrentRank()" class="bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-800 font-bold px-5 py-3 rounded-2xl text-sm sm:text-base transition">
+                        🔄 重新打亂
+                    </button>
+                </div>
+
+                <!-- 逐格解析區 -->
+                <div id="rank-result-box" class="hidden rounded-2xl p-4 border-2 space-y-2">
+                    <div id="rank-result-title" class="font-black text-lg"></div>
+                    <div id="rank-hints-grid" class="grid grid-cols-1 sm:grid-cols-5 gap-2 pt-2"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- 關卡四：海島航線「動動腦」路線迷宮（無交叉俐落版） -->
+        <!-- ========================================================= -->
+        <section id="stage-4" class="stage-panel hidden space-y-4">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-indigo-100 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-lg sm:text-xl font-black text-indigo-800">⛵ 海島航線大挑戰（進階版）：沿著「分數比較大」的路線走！</h2>
+                    <p class="text-xs sm:text-sm text-slate-600">挑戰升級！請綜合運用「看有沒有超過一半」、「跟 1 比差距（差 2 份）」與「換成帶分數」，點擊<b>比較大</b>的分數前進！</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="initMazeGame()" class="bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-800 font-bold px-3.5 py-2 rounded-xl text-sm">
+                        🔄 重新航行
+                    </button>
+                </div>
+            </div>
+
+            <!-- 海島 SVG 互動舞台 -->
+            <div class="bg-white rounded-3xl p-3 sm:p-5 shadow-lg border-2 border-sky-200 space-y-3">
+                <!-- 操作引導與提示狀態列 -->
+                <div id="maze-status-banner" class="bg-sky-50 border-2 border-sky-300 rounded-2xl p-3 sm:p-3.5 flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 font-black text-sky-900 text-sm sm:text-base">
+                        <span class="text-xl">🧭</span>
+                        <span id="maze-instruction-text">第 1 站（起點分岔）：請比較 7/16 和 6/11，點擊比較大的分數航行！</span>
+                    </div>
+                    <span id="maze-step-badge" class="bg-sky-600 text-white text-xs font-black px-3 py-1 rounded-full">進度：0 / 3 步</span>
+                </div>
+
+                <!-- 互動海洋路線 SVG 容器 -->
+                <div class="w-full overflow-x-auto">
+                    <div id="island-maze-wrapper" class="min-w-[680px] max-w-4xl mx-auto"></div>
+                </div>
+
+                <!-- 觸礁警告或通關祝賀區 -->
+                <div id="maze-feedback-box" class="hidden rounded-2xl p-4 border-2 text-sm sm:text-base font-bold transition-all"></div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- 關卡五：課後小測驗（三大題型綜合評量） -->
+        <!-- ========================================================= -->
+        <section id="stage-5" class="stage-panel hidden space-y-5">
+            <!-- 測驗頂部標題與分數卡 -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-indigo-100 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-lg sm:text-xl font-black text-indigo-800">📝 課後小測驗：分數的大小比較</h2>
+                    <p class="text-xs sm:text-sm text-slate-600">請直接點擊選項完成三大題測驗，全部作答後按下「交卷看成績」即可查看解析！</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div id="quiz-score-badge" class="hidden bg-amber-100 border-2 border-amber-400 px-4 py-1.5 rounded-xl font-black text-amber-900 text-base">
+                        得分：<span id="quiz-score-val" class="text-2xl text-rose-600">0</span> / 100 分
+                    </div>
+                    <button onclick="resetQuiz()" class="bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-800 font-bold px-3.5 py-2 rounded-xl text-sm">
+                        🔄 重新作答
+                    </button>
+                </div>
+            </div>
+
+            <!-- 第一大題：比較下面各組分數的大小 -->
+            <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border-2 border-sky-100 space-y-4">
+                <div class="flex items-center gap-2 border-b border-slate-100 pb-2.5">
+                    <span class="w-7 h-7 rounded-lg bg-sky-600 text-white font-black flex items-center justify-center text-sm">1</span>
+                    <h3 class="text-base sm:text-lg font-black text-slate-800">比較下面各組分數的大小（先化為帶分數或約分、通分再比較）</h3>
+                </div>
+                <div id="quiz-part-1" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <!-- 第二大題：生活情境應用題 -->
+            <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border-2 border-emerald-100 space-y-4">
+                <div class="flex items-center gap-2 border-b border-slate-100 pb-2.5">
+                    <span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-black flex items-center justify-center text-sm">2</span>
+                    <h3 class="text-base sm:text-lg font-black text-slate-800">想一想，選出正確的答案</h3>
+                </div>
+                <div id="quiz-part-2" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <!-- 第三大題：不用通分的方法比比看 -->
+            <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border-2 border-amber-100 space-y-4">
+                <div class="flex items-center gap-2 border-b border-slate-100 pb-2.5">
+                    <span class="w-7 h-7 rounded-lg bg-amber-500 text-slate-900 font-black flex items-center justify-center text-sm">3</span>
+                    <h3 class="text-base sm:text-lg font-black text-slate-800">不用通分的方法比比看，在 □ 裡填入 ＞、＜ 或 ＝</h3>
+                </div>
+                <div id="quiz-part-3" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+            </div>
+
+            <!-- 交卷按鈕與總回饋 -->
+            <div class="flex flex-col items-center gap-3 pb-4">
+                <button onclick="submitQuiz()" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black text-base sm:text-lg px-10 py-3.5 rounded-2xl shadow-lg flex items-center gap-2 transition">
+                    <span>🎯</span><span>交卷看成績與詳解</span>
+                </button>
+                <div id="quiz-summary-msg" class="hidden text-center font-bold text-sm sm:text-base px-4 py-2 rounded-xl"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- 口訣小抄彈窗 Modal -->
+    <!-- ========================================================= -->
+    <div id="cheat-sheet-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="if(event.target===this) toggleCheatSheet(false)">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border-4 border-amber-400 space-y-4 animate-pop">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-xl sm:text-2xl font-black text-indigo-800 flex items-center gap-2">
+                    <span>📜</span><span>不用通分！三招聰明算口訣</span>
+                </h3>
+                <button onclick="toggleCheatSheet(false)" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 font-black text-slate-600">✕</button>
+            </div>
+
+            <div class="space-y-3 text-sm sm:text-base">
+                <div class="bg-sky-50 border-l-4 border-sky-500 p-3 rounded-r-xl">
+                    <div class="font-black text-sky-900">第一招：同分子比大小（含帶分數整數相同）</div>
+                    <p class="text-slate-700 mt-0.5">分子一樣大時，<b>分母越大，分數越小</b>（平分越多份，每份越小）。<br>例：<span class="font-bold text-sky-700">1/5 &lt; 1/3</span>、<span class="font-bold text-sky-700">7/6 (1又1/6) &gt; 9/8 (1又1/8)</span></p>
+                </div>
+
+                <div class="bg-emerald-50 border-l-4 border-emerald-500 p-3 rounded-r-xl">
+                    <div class="font-black text-emerald-900">第二招：跟「1」比差距</div>
+                    <p class="text-slate-700 mt-0.5">兩個分數都比 1 少一點點時，<b>缺越少，分數越大</b>。<br>例：<span class="font-bold text-emerald-700">5/6</span> 缺 1/6，<span class="font-bold text-emerald-700">7/8</span> 只缺 1/8，所以 <span class="font-bold text-emerald-700">7/8 &gt; 5/6</span></p>
+                </div>
+
+                <div class="bg-amber-50 border-l-4 border-amber-500 p-3 rounded-r-xl">
+                    <div class="font-black text-amber-900">第三招：看有沒有超過一半（1/2）</div>
+                    <p class="text-slate-700 mt-0.5">看看誰超過一半、誰不到一半，就能直接比！<br>例：<span class="font-bold text-amber-700">4/7</span> 超過一半(3.5/7)，<span class="font-bold text-amber-700">5/12</span> 不到一半(6/12)，所以 <span class="font-bold text-amber-700">4/7 &gt; 5/12</span></p>
+                </div>
+            </div>
+
+            <div class="text-center pt-2">
+                <button onclick="toggleCheatSheet(false)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black px-8 py-2.5 rounded-xl shadow">
+                    我知道了，繼續闖關！
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* =========================================================
+           共用工具：標準上下分數渲染與分頁切換（完全靜音）
+        ========================================================= */
+        function renderFracHTML(num, den, whole = 0, extraClass = '') {
+            const fracPart = `<span class="frac ${extraClass}"><span class="frac-num">${num}</span><span class="frac-den">${den}</span></span>`;
+            if (whole && whole > 0) {
+                return `<span class="mixed-frac ${extraClass}"><span class="mixed-whole">${whole}</span>${fracPart}</span>`;
+            }
+            return fracPart;
+        }
+
+        function switchTab(stageNum) {
+            document.querySelectorAll('.stage-panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`stage-${stageNum}`).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn py-2 px-1 sm:px-2 rounded-xl font-bold text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-center gap-1 transition text-white hover:bg-white/15';
+            });
+            document.getElementById(`tab-btn-${stageNum}`).className = 'tab-btn py-2 px-1 sm:px-2 rounded-xl font-bold text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-center gap-1 transition bg-white text-indigo-700 shadow';
+        }
+
+        function toggleCheatSheet(show) {
+            const modal = document.getElementById('cheat-sheet-modal');
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        /* =========================================================
+           關卡零：5分鐘通分暖身複習
+        ========================================================= */
+        const warmupProblems = [
+            {
+                tag: '暖身題 ①：基礎異分母真分數',
+                s1Prompt: '分母是 3 和 5，先找出它們的最小公倍數當作「公分母」：',
+                l: { w: 0, n: 2, d: 3 },
+                r: { w: 0, n: 3, d: 5 },
+                lcdOpts: [8, 12, 15, 30],
+                correctLcd: 15,
+                answer: '>',
+                tip: '🎉 答對了！2/3 = 10/15，3/5 = 9/15，所以 2/3 > 3/5！'
+            },
+            {
+                tag: '暖身題 ②：找最小公倍數通分',
+                s1Prompt: '分母是 6 和 8，先找出它們的最小公倍數當作「公分母」：',
+                l: { w: 0, n: 5, d: 6 },
+                r: { w: 0, n: 7, d: 8 },
+                lcdOpts: [14, 24, 36, 48],
+                correctLcd: 24,
+                answer: '<',
+                tip: '🎉 答對了！5/6 = 20/24，7/8 = 21/24，所以 5/6 < 7/8！'
+            },
+            {
+                tag: '暖身題 ③：帶分數整數相同，通分比較分數部分',
+                s1Prompt: '整數部分都是 2，只要通分比較 3/10 和 3/8！先找 10 和 8 的最小公倍數：',
+                l: { w: 2, n: 3, d: 10 },
+                r: { w: 2, n: 3, d: 8 },
+                lcdOpts: [18, 20, 40, 80],
+                correctLcd: 40,
+                answer: '<',
+                tip: '🎉 答對了！2又3/10 = 2又12/40，2又3/8 = 2又15/40，所以 2又3/10 < 2又3/8！'
+            }
+        ];
+
+        let currentWarmupIdx = 0;
+        let warmupRevealedL = false;
+        let warmupRevealedR = false;
+
+        function loadWarmup(idx) {
+            currentWarmupIdx = idx;
+            warmupRevealedL = false;
+            warmupRevealedR = false;
+            const p = warmupProblems[idx];
+
+            document.querySelectorAll('.warmup-btn').forEach(b => {
+                b.className = 'warmup-btn bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold px-3.5 py-2 rounded-xl text-xs sm:text-sm';
+            });
+            document.getElementById(`warmup-btn-${idx}`).className = 'warmup-btn bg-indigo-600 text-white font-bold px-3.5 py-2 rounded-xl text-xs sm:text-sm shadow';
+
+            document.getElementById('warmup-tag').textContent = p.tag;
+            document.getElementById('warmup-s1-prompt').textContent = p.s1Prompt;
+            document.getElementById('warmup-orig-l').innerHTML = renderFracHTML(p.l.n, p.l.d, p.l.w, 'frac-lg');
+            document.getElementById('warmup-orig-r').innerHTML = renderFracHTML(p.r.n, p.r.d, p.r.w, 'frac-lg');
+
+            const lcdContainer = document.getElementById('warmup-lcd-opts');
+            lcdContainer.innerHTML = p.lcdOpts.map(val => `
+                <button type="button" onclick="selectWarmupLcd(${val}, this)" class="warmup-lcd-btn bg-white hover:bg-sky-50 border-2 border-slate-300 rounded-xl px-5 py-2 font-black text-base sm:text-lg text-slate-800 transition active:scale-95">
+                    ${val}
+                </button>
+            `).join('');
+
+            document.getElementById('warmup-s2-box').classList.add('hidden');
+            document.getElementById('warmup-s3-box').classList.add('hidden');
+            document.getElementById('warmup-fb-box').classList.add('hidden');
+        }
+
+        function selectWarmupLcd(val, btn) {
+            const p = warmupProblems[currentWarmupIdx];
+            if (val === p.correctLcd) {
+                document.querySelectorAll('.warmup-lcd-btn').forEach(b => {
+                    b.className = 'warmup-lcd-btn bg-slate-100 border-2 border-slate-200 rounded-xl px-5 py-2 font-black text-base sm:text-lg text-slate-400';
+                });
+                btn.className = 'warmup-lcd-btn bg-emerald-100 border-2 border-emerald-500 rounded-xl px-5 py-2 font-black text-base sm:text-lg text-emerald-800 shadow-sm animate-pop';
+
+                const mL = p.correctLcd / p.l.d;
+                const mR = p.correctLcd / p.r.d;
+                const nL = p.l.n * mL;
+                const nR = p.r.n * mR;
+
+                warmupRevealedL = false;
+                warmupRevealedR = false;
+
+                document.getElementById('warmup-exp-l').innerHTML = `
+                    ${renderFracHTML(p.l.n, p.l.d, p.l.w)}
+                    <span>＝</span>
+                    ${renderFracHTML(`${p.l.n}×${mL}`, `${p.l.d}×${mL}`, p.l.w)}
+                    <span>＝</span>
+                    <button type="button" onclick="revealWarmupResult('L')" id="warmup-res-btn-L" class="bg-sky-600 hover:bg-sky-700 active:scale-95 text-white text-xs sm:text-sm font-black px-3 py-1.5 rounded-xl shadow transition">
+                        點擊顯示結果
+                    </button>
+                `;
+                document.getElementById('warmup-exp-r').innerHTML = `
+                    ${renderFracHTML(p.r.n, p.r.d, p.r.w)}
+                    <span>＝</span>
+                    ${renderFracHTML(`${p.r.n}×${mR}`, `${p.r.d}×${mR}`, p.r.w)}
+                    <span>＝</span>
+                    <button type="button" onclick="revealWarmupResult('R')" id="warmup-res-btn-R" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-black px-3 py-1.5 rounded-xl shadow transition">
+                        點擊顯示結果
+                    </button>
+                `;
+
+                document.getElementById('warmup-fin-l').innerHTML = `<div class="flex flex-col items-center">${renderFracHTML(p.l.n, p.l.d, p.l.w, 'frac-lg')}<span class="text-xs font-black text-sky-700 mt-1">(${p.l.w ? p.l.w + '又' : ''}${nL}/${p.correctLcd})</span></div>`;
+                document.getElementById('warmup-fin-r').innerHTML = `<div class="flex flex-col items-center">${renderFracHTML(p.r.n, p.r.d, p.r.w, 'frac-lg')}<span class="text-xs font-black text-emerald-700 mt-1">(${p.r.w ? p.r.w + '又' : ''}${nR}/${p.correctLcd})</span></div>`;
+
+                const fBox = document.getElementById('warmup-fin-box');
+                fBox.textContent = '？';
+                fBox.className = 'w-12 h-12 rounded-xl border-2 border-amber-500 bg-white flex items-center justify-center text-2xl font-black text-amber-700 shadow-inner';
+
+                document.getElementById('warmup-s2-box').classList.remove('hidden');
+                document.getElementById('warmup-s3-box').classList.add('hidden');
+                document.getElementById('warmup-fb-box').classList.add('hidden');
+            } else {
+                btn.classList.remove('animate-shake');
+                void btn.offsetWidth;
+                btn.classList.add('bg-rose-100', 'border-rose-500', 'text-rose-800', 'animate-shake');
+            }
+        }
+
+        function revealWarmupResult(side) {
+            const p = warmupProblems[currentWarmupIdx];
+            if (side === 'L') {
+                warmupRevealedL = true;
+                const mL = p.correctLcd / p.l.d;
+                const nL = p.l.n * mL;
+                const btn = document.getElementById('warmup-res-btn-L');
+                if (btn) {
+                    btn.outerHTML = `<span class="text-sky-700 font-black animate-pop">${renderFracHTML(nL, p.correctLcd, p.l.w)}</span>`;
+                }
+            } else if (side === 'R') {
+                warmupRevealedR = true;
+                const mR = p.correctLcd / p.r.d;
+                const nR = p.r.n * mR;
+                const btn = document.getElementById('warmup-res-btn-R');
+                if (btn) {
+                    btn.outerHTML = `<span class="text-emerald-700 font-black animate-pop">${renderFracHTML(nR, p.correctLcd, p.r.w)}</span>`;
+                }
+            }
+
+            if (warmupRevealedL && warmupRevealedR) {
+                document.getElementById('warmup-s3-box').classList.remove('hidden');
+            }
+        }
+
+        function checkWarmupSym(sym) {
+            const p = warmupProblems[currentWarmupIdx];
+            const fBox = document.getElementById('warmup-fin-box');
+            const fbBox = document.getElementById('warmup-fb-box');
+            const fbText = document.getElementById('warmup-fb-text');
+
+            fBox.textContent = sym;
+            fbBox.classList.remove('hidden', 'bg-emerald-100', 'border-emerald-400', 'text-emerald-950', 'bg-rose-100', 'border-rose-400', 'text-rose-900');
+
+            if (sym === p.answer) {
+                fBox.className = 'w-12 h-12 rounded-xl border-2 border-emerald-600 bg-emerald-100 flex items-center justify-center text-2xl font-black text-emerald-800 animate-pop';
+                fbBox.classList.add('bg-emerald-100', 'border-emerald-400', 'text-emerald-950');
+                fbText.textContent = p.tip;
+            } else {
+                fBox.className = 'w-12 h-12 rounded-xl border-2 border-rose-500 bg-rose-100 flex items-center justify-center text-2xl font-black text-rose-700 animate-shake';
+                fbBox.classList.add('bg-rose-100', 'border-rose-400', 'text-rose-900');
+                fbText.textContent = '🤔 分母已經一樣大了，只要比較上面擴分後的「分子」哪個比較大就可以囉！';
+            }
+        }
+
+        /* =========================================================
+           關卡一：互動圖解探究（完全保留您的設計與同步隱藏邏輯）
+        ========================================================= */
+        let visualState = {
+            leftNum: 1, leftDen: 5,
+            rightNum: 1, rightDen: 3,
+            shape: 'pie',
+            revealSymbol: false,
+            activePreset: 'ex1'
+        };
+
+        const presetNotes = {
+            ex1: '【策略1：同分子比大小】1/5 和 1/3：分子都是 1，把同一個圓平分成 5 份比平分成 3 份小，所以 1/5 < 1/3。',
+            ex2: '【策略1：同分子比大小】2/7 和 2/5：分子都是 2，分母 7 > 5，平分越多份每份越小，所以 2/7 < 2/5。',
+            ex3: '【策略1：假分數換帶分數（同分子比大小）】7/6 和 9/8：勾選「假分數顯示為帶分數」看看！7/6 = 1又1/6，9/8 = 1又1/8，整數都是 1，因為 1/6 > 1/8，所以 7/6 > 9/8！',
+            ex4: '【策略2：跟 1 比差距】5/6 和 7/8：5/6 比 1 少 1/6，7/8 比 1 少 1/8。因為 1/8 < 1/6（缺得比較少），所以 7/8 > 5/6！',
+            ex5: '【策略3：看有沒有超過一半】5/12 和 4/7：看看中間紅色「1/2 基準線」！5/12 不到一半（6/12），4/7 超過一半（3.5/7），所以 5/12 < 4/7！'
+        };
+
+        function setShape(shape) {
+            visualState.shape = shape;
+            const barBtn = document.getElementById('shape-bar-btn');
+            const pieBtn = document.getElementById('shape-pie-btn');
+            if (shape === 'bar') {
+                barBtn.className = 'px-3.5 py-1.5 rounded-lg font-bold text-sm bg-indigo-600 text-white shadow transition';
+                pieBtn.className = 'px-3.5 py-1.5 rounded-lg font-bold text-sm text-slate-600 hover:text-slate-900 transition';
+            } else {
+                pieBtn.className = 'px-3.5 py-1.5 rounded-lg font-bold text-sm bg-indigo-600 text-white shadow transition';
+                barBtn.className = 'px-3.5 py-1.5 rounded-lg font-bold text-sm text-slate-600 hover:text-slate-900 transition';
+            }
+            renderVisualStage();
+        }
+
+        function loadPreset(lNum, lDen, rNum, rDen, presetKey) {
+            visualState.leftNum = lNum;
+            visualState.leftDen = lDen;
+            visualState.rightNum = rNum;
+            visualState.rightDen = rDen;
+            visualState.activePreset = presetKey;
+            visualState.revealSymbol = false;
+            document.getElementById('reveal-btn').textContent = '顯示大小符號';
+
+            const elfBox = document.getElementById('elf-discovery-box');
+            if (presetKey === 'ex1' || presetKey === 'ex2') {
+                elfBox.classList.remove('hidden');
+            } else {
+                elfBox.classList.add('hidden');
+            }
+
+            document.getElementById('toggleMixedFormat').checked = (lNum > lDen || rNum > rDen);
+            document.getElementById('toggleGapHighlight').checked = (presetKey === 'ex4');
+            document.getElementById('toggleHalfLine').checked = (presetKey === 'ex5');
+
+            renderVisualStage(presetNotes[presetKey] || '');
+        }
+
+        function checkElfBlank(choice) {
+            const slot = document.getElementById('elf-blank-slot');
+            if (choice === '小') {
+                slot.textContent = '小 ✔';
+                slot.className = 'inline-block min-w-[3.5rem] text-center px-2.5 py-0.5 mx-1 rounded-lg border-2 border-emerald-500 bg-emerald-100 font-black text-emerald-800 animate-pop';
+            } else {
+                slot.textContent = '再想想';
+                slot.className = 'inline-block min-w-[3.5rem] text-center px-2.5 py-0.5 mx-1 rounded-lg border-2 border-rose-500 bg-rose-100 font-black text-rose-700 animate-shake';
+            }
+        }
+
+        function adjustFrac(side, part, delta) {
+            visualState.activePreset = '';
+            if (side === 'left') {
+                if (part === 'den') {
+                    visualState.leftDen = Math.min(24, Math.max(2, visualState.leftDen + delta));
+                    if (visualState.leftNum > visualState.leftDen * 2) visualState.leftNum = visualState.leftDen * 2;
+                } else {
+                    visualState.leftNum = Math.min(visualState.leftDen * 2, Math.max(1, visualState.leftNum + delta));
+                }
+            } else {
+                if (part === 'den') {
+                    visualState.rightDen = Math.min(24, Math.max(2, visualState.rightDen + delta));
+                    if (visualState.rightNum > visualState.rightDen * 2) visualState.rightNum = visualState.rightDen * 2;
+                } else {
+                    visualState.rightNum = Math.min(visualState.rightDen * 2, Math.max(1, visualState.rightNum + delta));
+                }
+            }
+            renderVisualStage();
+        }
+
+        function toggleRevealSymbol() {
+            visualState.revealSymbol = !visualState.revealSymbol;
+            document.getElementById('reveal-btn').textContent = visualState.revealSymbol ? '隱藏大小符號' : '顯示大小符號';
+            renderVisualStage(presetNotes[visualState.activePreset] || '');
+        }
+
+        function createBarSVG(num, den, fillColor, showHalf, showGap) {
+            const wholes = Math.ceil(num / den);
+            const totalBars = Math.max(1, wholes);
+            const w = 280, barH = 44;
+            const totalH = totalBars * (barH + 14) + 22;
+            let svgContent = '';
+
+            for (let b = 0; b < totalBars; b++) {
+                const yOffset = 16 + b * (barH + 14);
+                const cellW = w / den;
+                const filledInThisBar = Math.min(den, Math.max(0, num - b * den));
+
+                for (let i = 0; i < den; i++) {
+                    const isFilled = i < filledInThisBar;
+                    let bg = isFilled ? fillColor : (showGap && num < den ? '#ffe4e6' : '#ffffff');
+                    svgContent += `<rect x="${i * cellW}" y="${yOffset}" width="${cellW}" height="${barH}" fill="${bg}" stroke="#334155" stroke-width="1.2"/>`;
+                }
+
+                if (showGap && num < den && b === 0) {
+                    const gapStart = num * cellW;
+                    const gapW = (den - num) * cellW;
+                    svgContent += `
+                        <rect x="${gapStart}" y="${yOffset}" width="${gapW}" height="${barH}" fill="none" stroke="#e11d48" stroke-width="2.5" stroke-dasharray="4,3"/>
+                        <text x="${gapStart + gapW / 2}" y="${yOffset + barH + 13}" text-anchor="middle" fill="#e11d48" font-size="11" font-weight="bold">差 ${den - num}/${den}</text>
+                    `;
+                }
+            }
+
+            if (showHalf && num <= den) {
+                svgContent += `
+                    <line x1="${w / 2}" y1="4" x2="${w / 2}" y2="${16 + barH + 6}" stroke="#d97706" stroke-width="3" stroke-dasharray="5,4"/>
+                    <text x="${w / 2}" y="11" text-anchor="middle" fill="#b45309" font-size="11" font-weight="bold">1/2 基準線</text>
+                `;
+            }
+            return `<svg viewBox="0 0 ${w} ${totalH}" class="w-full max-w-[300px] h-auto overflow-visible">${svgContent}</svg>`;
+        }
+
+        function createSinglePie(cx, cy, r, filledCount, den, fillColor, showHalf, showGap, totalNum) {
+            let slices = '';
+            for (let i = 0; i < den; i++) {
+                const startAngle = (i * 2 * Math.PI) / den - Math.PI / 2;
+                const endAngle = ((i + 1) * 2 * Math.PI) / den - Math.PI / 2;
+                const x1 = cx + r * Math.cos(startAngle);
+                const y1 = cy + r * Math.sin(startAngle);
+                const x2 = cx + r * Math.cos(endAngle);
+                const y2 = cy + r * Math.sin(endAngle);
+                const largeArc = (endAngle - startAngle) > Math.PI ? 1 : 0;
+                const isFilled = i < filledCount;
+                const bg = isFilled ? fillColor : (showGap && totalNum < den ? '#ffe4e6' : '#ffffff');
+                const strokeCol = (!isFilled && showGap && totalNum < den) ? '#e11d48' : '#334155';
+                slices += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z" fill="${bg}" stroke="${strokeCol}" stroke-width="1.2"/>`;
+            }
+            let halfLine = '';
+            if (showHalf && totalNum <= den) {
+                halfLine = `
+                    <line x1="${cx}" y1="${cy - r - 8}" x2="${cx}" y2="${cy + r + 8}" stroke="#e11d48" stroke-width="2.5" stroke-dasharray="5,3"/>
+                    <text x="${cx}" y="${cy - r - 11}" text-anchor="middle" fill="#e11d48" font-size="11" font-weight="bold">1/2</text>
+                `;
+            }
+            return slices + halfLine;
+        }
+
+        function createPieSVG(num, den, fillColor, showHalf, showGap) {
+            if (num <= den) {
+                const cx = 90, cy = 90, r = 72;
+                const pie = createSinglePie(cx, cy, r, num, den, fillColor, showHalf, showGap, num);
+                let gapBadge = '';
+                if (showGap && num < den) {
+                    gapBadge = `<text x="${cx}" y="${cy + r + 16}" text-anchor="middle" fill="#e11d48" font-size="12" font-weight="bold">距離 1 還差 ${den - num}/${den}</text>`;
+                }
+                return `<svg viewBox="0 0 180 198" class="w-44 h-44 sm:w-48 sm:h-48 overflow-visible">${pie}${gapBadge}</svg>`;
+            } else {
+                const r = 56;
+                const pie1 = createSinglePie(68, 82, r, den, den, fillColor, false, false, num);
+                const pie2 = createSinglePie(196, 82, r, num - den, den, fillColor, false, false, num);
+                return `<svg viewBox="0 0 264 164" class="w-full max-w-[270px] h-auto overflow-visible">${pie1}${pie2}</svg>`;
+            }
+        }
+
+        function formatFracDisplay(num, den, showMixed) {
+            if (showMixed && num > den) {
+                const whole = Math.floor(num / den);
+                const rem = num % den;
+                if (rem === 0) return `<span class="text-3xl font-black">${whole}</span>`;
+                return `${renderFracHTML(num, den, 0, 'frac-lg')} <span class="text-base font-bold text-slate-400 mx-1">=</span> ${renderFracHTML(rem, den, whole, 'frac-lg')}`;
+            }
+            return renderFracHTML(num, den, 0, 'frac-lg');
+        }
+
+        function renderVisualStage(customNote = '') {
+            const { leftNum, leftDen, rightNum, rightDen, shape, revealSymbol } = visualState;
+            const showHalf = document.getElementById('toggleHalfLine').checked;
+            const showGap = document.getElementById('toggleGapHighlight').checked;
+            const showMixed = document.getElementById('toggleMixedFormat').checked;
+
+            document.getElementById('left-num-val').textContent = leftNum;
+            document.getElementById('left-den-val').textContent = leftDen;
+            document.getElementById('right-num-val').textContent = rightNum;
+            document.getElementById('right-den-val').textContent = rightDen;
+
+            document.getElementById('left-frac-display').innerHTML = formatFracDisplay(leftNum, leftDen, showMixed);
+            document.getElementById('right-frac-display').innerHTML = formatFracDisplay(rightNum, rightDen, showMixed);
+
+            const leftBox = document.getElementById('left-visual-box');
+            const rightBox = document.getElementById('right-visual-box');
+
+            if (shape === 'bar') {
+                leftBox.innerHTML = createBarSVG(leftNum, leftDen, '#38bdf8', showHalf, showGap);
+                rightBox.innerHTML = createBarSVG(rightNum, rightDen, '#86efac', showHalf, showGap);
+            } else {
+                leftBox.innerHTML = createPieSVG(leftNum, leftDen, '#bae6fd', showHalf, showGap);
+                rightBox.innerHTML = createPieSVG(rightNum, rightDen, '#bbf7d0', showHalf, showGap);
+            }
+
+            const lVal = leftNum / leftDen;
+            const rVal = rightNum / rightDen;
+            let sym = '=';
+            if (Math.abs(lVal - rVal) > 1e-9) sym = lVal > rVal ? '>' : '<';
+
+            const badge = document.getElementById('compare-symbol-badge');
+            badge.textContent = revealSymbol ? sym : '?';
+            badge.className = revealSymbol
+                ? 'w-16 h-16 rounded-2xl bg-amber-400 text-slate-900 shadow-lg flex items-center justify-center text-4xl font-black border-4 border-white cursor-pointer transition active:scale-95'
+                : 'w-16 h-16 rounded-2xl bg-slate-700 text-white shadow-lg flex items-center justify-center text-3xl font-black border-4 border-white cursor-pointer transition active:scale-95';
+
+            const insightEl = document.getElementById('visual-insight-text');
+            const lGap = leftDen - leftNum;
+            const rGap = rightDen - rightNum;
+            const isSameGapToOne = (leftNum < leftDen && rightNum < rightDen && lGap === rGap && lGap > 0);
+
+            if (!revealSymbol) {
+                if (customNote) {
+                    const maskedNote = customNote
+                        .replace(/，所以.*$/, '，猜猜看哪一個比較大？（點擊中間「？」框框揭曉答案）')
+                        .replace(/比平分成 3 份小.*$/, '，猜猜看哪一個比較大？（點擊中間「？」框框揭曉答案）');
+                    insightEl.textContent = maskedNote;
+                } else if (Math.abs(lVal - rVal) < 1e-9) {
+                    insightEl.textContent = `觀察左右兩邊的塗色面積，它們一樣大嗎？（點擊中間「？」框框揭曉答案）`;
+                } else if (leftNum === rightNum) {
+                    insightEl.textContent = `【策略1：同分子比大小】分子都是 ${leftNum}，觀察看看平分成 ${leftDen} 份和 ${rightDen} 份，哪一邊的每一份比較大？（點擊中間「？」框框揭曉答案）`;
+                } else if (leftNum > leftDen && rightNum > rightDen) {
+                    const lW = Math.floor(leftNum / leftDen), lR = leftNum % leftDen;
+                    const rW = Math.floor(rightNum / rightDen), rR = rightNum % rightDen;
+                    insightEl.textContent = `【策略1：假分數換帶分數比大小】${leftNum}/${leftDen} = ${lW}又${lR}/${leftDen}，${rightNum}/${rightDen} = ${rW}又${rR}/${rightDen}，比比看哪一邊比較大？（點擊中間「？」框框揭曉答案）`;
+                } else if (isSameGapToOne) {
+                    insightEl.textContent = `【策略2：跟 1 比差距】${leftNum}/${leftDen} 距離 1 差 ${lGap}/${leftDen}；${rightNum}/${rightDen} 距離 1 差 ${rGap}/${rightDen}。缺口分子都是 ${lGap}，缺得越少越接近 1，哪一個比較大？（點擊中間「？」框框揭曉答案）`;
+                } else if ((lVal < 0.5 && rVal > 0.5) || (lVal > 0.5 && rVal < 0.5)) {
+                    insightEl.textContent = `【策略3：看有沒有超過一半】看看「1/2 基準線」，哪一個超過一半、哪一個不到一半？（點擊中間「？」框框揭曉答案）`;
+                } else {
+                    insightEl.textContent = `觀察看看圓餅或長條的塗色面積，先猜猜看哪一邊比較大，再點擊中間「？」框框揭曉答案喔！`;
+                }
+            } else {
+                if (customNote) {
+                    insightEl.textContent = customNote;
+                } else if (Math.abs(lVal - rVal) < 1e-9) {
+                    insightEl.textContent = `這兩個是等值分數喔！塗色面積完全一樣大。`;
+                } else if (leftNum === rightNum) {
+                    insightEl.textContent = `【策略1：同分子比大小】分子都是 ${leftNum}，分母 ${Math.max(leftDen, rightDen)} 切得比較細（每份比較小），所以 ${leftDen > rightDen ? `${leftNum}/${leftDen} < ${rightNum}/${rightDen}` : `${leftNum}/${leftDen} > ${rightNum}/${rightDen}`}。`;
+                } else if (leftNum > leftDen && rightNum > rightDen) {
+                    const lW = Math.floor(leftNum / leftDen), lR = leftNum % leftDen;
+                    const rW = Math.floor(rightNum / rightDen), rR = rightNum % rightDen;
+                    insightEl.textContent = `【策略1：假分數換帶分數比大小】${leftNum}/${leftDen} = ${lW}又${lR}/${leftDen}，${rightNum}/${rightDen} = ${rW}又${rR}/${rightDen}，先比整數，整數相同再比分數部分！`;
+                } else if (isSameGapToOne) {
+                    const bigFrac = lVal > rVal ? `${leftNum}/${leftDen}` : `${rightNum}/${rightDen}`;
+                    insightEl.textContent = `【策略2：跟 1 比差距】${leftNum}/${leftDen} 距離 1 差 ${lGap}/${leftDen}；${rightNum}/${rightDen} 距離 1 差 ${rGap}/${rightDen}。缺越少越接近 1，所以 ${bigFrac} 比較大！`;
+                } else if ((lVal < 0.5 && rVal > 0.5) || (lVal > 0.5 && rVal < 0.5)) {
+                    const bigSide = lVal > 0.5 ? `${leftNum}/${leftDen}` : `${rightNum}/${rightDen}`;
+                    const smallSide = lVal < 0.5 ? `${leftNum}/${leftDen}` : `${rightNum}/${rightDen}`;
+                    insightEl.textContent = `【策略3：看有沒有超過一半】${bigSide} 超過一半（1/2），而 ${smallSide} 不到一半，不用通分就知道 ${bigSide} 比較大！`;
+                } else {
+                    insightEl.textContent = `觀察看看圓餅或長條的塗色面積，也可以勾選上方的「顯示 1/2 基準線」或「高亮距離 1 的差距」來幫忙判斷喔！`;
+                }
+            }
+        }
+
+        /* =========================================================
+           關卡二：判斷方式大分類
+        ========================================================= */
+        const sortCardsData = [
+            { id: 'c1', tag: '練習 1', f1: {n:1, d:5}, f2: {n:1, d:8}, sym: '>', cat: 1, tip: '1/5 > 1/8！分子都是 1，分母 5 < 8，平分越少份每份越大。' },
+            { id: 'c2', tag: '練習 2', f1: {n:1, d:16}, f2: {n:1, d:12}, sym: '<', cat: 1, tip: '1/16 < 1/12！分子都是 1，分母 16 > 12，所以 1/16 比較小。' },
+            { id: 'c3', tag: '練習 3', f1: {n:3, d:7}, f2: {n:3, d:10}, sym: '>', cat: 1, tip: '3/7 > 3/10！分子都是 3，平分成 7 份比平分成 10 份每一份都更大。' },
+            { id: 'c4', tag: '練習 4', f1: {n:8, d:7}, f2: {n:10, d:9}, sym: '>', cat: 1, tip: '8/7 > 10/9！換成帶分數是 1又1/7 和 1又1/9，因為 1/7 > 1/9，所以 8/7 > 10/9。' },
+
+            { id: 'c5', tag: '練習 5', f1: {n:7, d:8}, f2: {n:8, d:9}, sym: '<', cat: 2, tip: '7/8 < 8/9！7/8 距離 1 差 1/8，8/9 距離 1 差 1/9，缺得越少越大！' },
+            { id: 'c6', tag: '練習 6', f1: {n:7, d:9}, f2: {n:9, d:11}, sym: '<', cat: 2, tip: '7/9 < 9/11！7/9 距離 1 差 2/9，9/11 距離 1 差 2/11；因為 2/11 < 2/9（缺得比較少），所以 9/11 比較大！' },
+            { id: 'c7', tag: '練習 7', f1: {n:11, d:13}, f2: {n:5, d:7}, sym: '>', cat: 2, tip: '11/13 > 5/7！11/13 距離 1 差 2/13，5/7 距離 1 差 2/7；因為 2/13 < 2/7（缺得比較少），所以 11/13 比較大！' },
+            { id: 'c8', tag: '練習 8', f1: {n:15, d:17}, f2: {n:17, d:19}, sym: '<', cat: 2, tip: '15/17 < 17/19！15/17 距離 1 差 2/17，17/19 距離 1 差 2/19，缺得越少越接近 1！' },
+
+            { id: 'c9', tag: '練習 9', f1: {n:5, d:12}, f2: {n:4, d:7}, sym: '<', cat: 3, tip: '5/12 < 4/7！5/12 不到一半（6/12），4/7 超過一半（3.5/7），不用通分就能比！' },
+            { id: 'c10', tag: '練習 10', f1: {n:6, d:11}, f2: {n:7, d:16}, sym: '>', cat: 3, tip: '6/11 > 7/16！6/11 超過一半（5.5/11），7/16 不到一半（8/16），所以 6/11 比較大！' },
+            { id: 'c11', tag: '練習 11', f1: {n:3, d:8}, f2: {n:5, d:9}, sym: '<', cat: 3, tip: '3/8 < 5/9！3/8 不到一半（4/8），5/9 超過一半（4.5/9），輕鬆分出大小！' },
+            { id: 'c12', tag: '練習 12', f1: {n:11, d:20}, f2: {n:8, d:18}, sym: '>', cat: 3, tip: '11/20 > 8/18！11/20 超過一半（10/20），8/18 不到一半（9/18），所以 11/20 比較大！' }
+        ];
+
+        let selectedSortCardId = null;
+        let sortCompletedCount = 0;
+
+        function initSortGame() {
+            selectedSortCardId = null;
+            sortCompletedCount = 0;
+            document.getElementById('sort-progress').textContent = '0';
+            document.getElementById('selected-card-hint').textContent = '';
+            document.getElementById('sort-feedback').classList.add('hidden');
+
+            [1, 2, 3].forEach(i => document.getElementById(`bin-items-${i}`).innerHTML = '');
+
+            const shuffled = [...sortCardsData].sort(() => Math.random() - 0.5);
+            const pool = document.getElementById('sort-cards-pool');
+            pool.innerHTML = '';
+
+            shuffled.forEach(item => {
+                const card = document.createElement('div');
+                card.id = `sort-card-${item.id}`;
+                card.draggable = true;
+                card.dataset.cardId = item.id;
+                card.className = 'sort-card cursor-pointer bg-white hover:bg-indigo-50 border-2 border-indigo-300 rounded-xl px-3 py-2 shadow-sm flex flex-col items-center text-slate-800 transition-all';
+                card.className = 'sort-card cursor-pointer bg-white hover:bg-indigo-50 border-2 border-indigo-300 rounded-xl px-3.5 py-2.5 shadow-sm flex flex-col items-center justify-center text-slate-800 transition-all';
+                card.innerHTML = `
+                    <div class="flex items-center gap-1.5">
+                        ${renderFracHTML(item.f1.n, item.f1.d, item.f1.w || 0)}
+                        <span class="sort-sym-box w-5 h-5 rounded border border-slate-300 text-xs font-black text-slate-400 flex items-center justify-center">?</span>
+                        ${renderFracHTML(item.f2.n, item.f2.d, item.f2.w || 0)}
+                    </div>
+                `;
+                card.onclick = () => selectSortCard(item.id);
+                card.ondragstart = (e) => {
+                    selectSortCard(item.id);
+                    e.dataTransfer.setData('text/plain', item.id);
+                };
+                pool.appendChild(card);
+            });
+        }
+
+        function selectSortCard(cardId) {
+            document.querySelectorAll('.sort-card').forEach(c => c.classList.remove('card-selected'));
+            if (selectedSortCardId === cardId) {
+                selectedSortCardId = null;
+                document.getElementById('selected-card-hint').textContent = '';
+                return;
+            }
+            selectedSortCardId = cardId;
+            const el = document.getElementById(`sort-card-${cardId}`);
+            if (el) {
+                el.classList.add('card-selected');
+                document.getElementById('selected-card-hint').textContent = '✨ 已選取題卡！請點選下方對應的判斷方式箱';
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dropzone-hover');
+        }
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('dropzone-hover');
+        }
+        function handleDrop(e, binCat) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dropzone-hover');
+            const cardId = e.dataTransfer.getData('text/plain') || selectedSortCardId;
+            if (cardId) attemptPlaceCard(cardId, binCat);
+        }
+        function handleBinClick(binCat) {
+            if (!selectedSortCardId) {
+                showSortFeedback('warning', '👆 請先點選上方的一張白色分數題卡，再點選判斷方式箱喔！');
+                return;
+            }
+            attemptPlaceCard(selectedSortCardId, binCat);
+        }
+
+        function attemptPlaceCard(cardId, binCat) {
+            const cardData = sortCardsData.find(c => c.id === cardId);
+            const cardEl = document.getElementById(`sort-card-${cardId}`);
+            if (!cardData || !cardEl) return;
+
+            if (cardData.cat === binCat) {
+                cardEl.classList.remove('card-selected', 'cursor-pointer', 'hover:bg-indigo-50', 'border-indigo-300');
+                cardEl.classList.add('bg-white', 'border-emerald-500', 'animate-pop', 'pointer-events-none', 'text-sm');
+                cardEl.draggable = false;
+                const symBox = cardEl.querySelector('.sort-sym-box');
+                if (symBox) {
+                    symBox.textContent = cardData.sym;
+                    symBox.className = 'w-6 h-6 rounded bg-emerald-100 border border-emerald-500 text-sm font-black text-emerald-800 flex items-center justify-center';
+                }
+                document.getElementById(`bin-items-${binCat}`).appendChild(cardEl);
+
+                selectedSortCardId = null;
+                document.getElementById('selected-card-hint').textContent = '';
+                sortCompletedCount++;
+                document.getElementById('sort-progress').textContent = sortCompletedCount;
+
+                if (sortCompletedCount === sortCardsData.length) {
+                    showSortFeedback('success', `🎉 太棒了！12 題「判斷方式大分類」全部挑戰完成！`);
+                } else {
+                    showSortFeedback('success', `✅ 答對了！${cardData.tip}`);
+                }
+            } else {
+                cardEl.classList.remove('animate-shake');
+                void cardEl.offsetWidth;
+                cardEl.classList.add('animate-shake');
+                showSortFeedback('error', `🤔 再想一想喔！觀察看看分子一樣、還是都比 1 少一點（差 1 份或差 2 份），或是看看有沒有超過一半！`);
+            }
+        }
+
+        function showSortFeedback(type, msg) {
+            const fb = document.getElementById('sort-feedback');
+            fb.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-900', 'border-emerald-300', 'bg-rose-100', 'text-rose-900', 'border-rose-300', 'bg-amber-100', 'text-amber-900', 'border-amber-300');
+            fb.classList.add('border');
+            if (type === 'success') {
+                fb.classList.add('bg-emerald-100', 'text-emerald-900', 'border-emerald-300');
+            } else if (type === 'error') {
+                fb.classList.add('bg-rose-100', 'text-rose-900', 'border-rose-300');
+            } else {
+                fb.classList.add('bg-amber-100', 'text-amber-900', 'border-amber-300');
+            }
+            fb.textContent = msg;
+        }
+
+        /* =========================================================
+           關卡三：數位分數排排站（保留拖曳 + 左右箭頭移動原版設計）
+        ========================================================= */
+        let currentRankMode = 'basic';
+        let currentRankItems = [];
+        let draggedRankIdx = null;
+
+        const rankPresets = {
+            basic: [
+                { n: 1, d: 20, val: 1/20, hint: '分子為 1，平分 20 份最小' },
+                { n: 1, d: 12, val: 1/12, hint: '同分子比較，1/12 > 1/20' },
+                { n: 5, d: 12, val: 5/12, hint: '不到一半（6/12）' },
+                { n: 4, d: 7, val: 4/7, hint: '超過一半（3.5/7）' },
+                { n: 8, d: 9, val: 8/9, hint: '距離 1 只差 1/9，最大' }
+            ],
+            challenge: [
+                { n: 1, d: 10, val: 1/10, hint: '分子為 1，最小' },
+                { n: 7, d: 16, val: 7/16, hint: '不到一半（8/16）' },
+                { n: 6, d: 11, val: 6/11, hint: '超過一半（5.5/11）' },
+                { n: 9, d: 8, val: 9/8, hint: '大於 1（1又1/8）' },
+                { n: 7, d: 6, val: 7/6, hint: '1又1/6，大於 1又1/8，最大' }
+            ]
+        };
+
+        function generateRandomRankItems() {
+            const pool1 = [{n:1, d:20, hint:'分子為1，分母最大所以極小'}, {n:1, d:18, hint:'只有1/18'}, {n:1, d:15, hint:'分子為1'}];
+            const pool2 = [{n:1, d:6, hint:'同分子比較大於前者'}, {n:1, d:4, hint:'四分之一'}, {n:3, d:8, hint:'不到1/2（4/8）'}];
+            const pool3 = [{n:5, d:12, hint:'不到一半（6/12）'}, {n:7, d:16, hint:'不到一半（8/16）'}, {n:8, d:18, hint:'不到一半（9/18）'}];
+            const pool4 = [{n:4, d:7, hint:'超過一半（3.5/7）'}, {n:5, d:9, hint:'超過一半（4.5/9）'}, {n:6, d:11, hint:'超過一半（5.5/11）'}];
+            const pool5 = [{n:7, d:8, hint:'距離1只差1/8'}, {n:8, d:9, hint:'距離1只差1/9'}, {n:7, d:6, hint:'超過1（1又1/6）'}];
+
+            const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+            return [pick(pool1), pick(pool2), pick(pool3), pick(pool4), pick(pool5)].map(item => ({
+                ...item,
+                val: item.n / item.d
+            }));
+        }
+
+        function loadRankLevel(mode) {
+            currentRankMode = mode;
+            document.querySelectorAll('.rank-mode-btn').forEach(b => {
+                b.className = 'rank-mode-btn bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold px-3.5 py-2 rounded-xl text-sm';
+            });
+            document.getElementById(`rank-btn-${mode}`).className = 'rank-mode-btn bg-indigo-600 text-white font-bold px-3.5 py-2 rounded-xl text-sm shadow';
+
+            const baseList = mode === 'random' ? generateRandomRankItems() : [...rankPresets[mode]];
+            currentRankItems = shuffleNotSorted(baseList);
+            document.getElementById('rank-result-box').classList.add('hidden');
+            renderRankSlots();
+        }
+
+        function shuffleNotSorted(arr) {
+            let copy = [...arr];
+            do {
+                copy.sort(() => Math.random() - 0.5);
+            } while (copy.every((v, i, a) => i === 0 || a[i - 1].val <= v.val));
+            return copy;
+        }
+
+        function shuffleCurrentRank() {
+            currentRankItems = shuffleNotSorted(currentRankItems);
+            document.getElementById('rank-result-box').classList.add('hidden');
+            renderRankSlots();
+        }
+
+        function moveRankCard(index, dir) {
+            const target = index + dir;
+            if (target < 0 || target >= currentRankItems.length) return;
+            [currentRankItems[index], currentRankItems[target]] = [currentRankItems[target], currentRankItems[index]];
+            document.getElementById('rank-result-box').classList.add('hidden');
+            renderRankSlots();
+        }
+
+        function renderRankSlots(checkedStatus = null) {
+            const container = document.getElementById('rank-slots-container');
+            container.innerHTML = '';
+
+            currentRankItems.forEach((item, idx) => {
+                let borderClass = 'border-indigo-300 bg-indigo-50/40';
+                let badgeHTML = `<span class="text-xs font-black text-slate-400">第 ${idx + 1} 格</span>`;
+
+                if (checkedStatus) {
+                    if (checkedStatus[idx]) {
+                        borderClass = 'border-emerald-500 bg-emerald-50';
+                        badgeHTML = `<span class="text-xs font-black text-emerald-600">✅ 正確</span>`;
+                    } else {
+                        borderClass = 'border-rose-500 bg-rose-50 animate-shake';
+                        badgeHTML = `<span class="text-xs font-black text-rose-600">❌ 位置不對</span>`;
+                    }
+                }
+
+                const slot = document.createElement('div');
+                slot.draggable = true;
+                slot.className = `rounded-2xl border-2 ${borderClass} p-2 sm:p-3 flex flex-col items-center justify-between shadow-sm cursor-grab active:cursor-grabbing transition`;
+
+                slot.ondragstart = () => { draggedRankIdx = idx; };
+                slot.ondragover = (e) => { e.preventDefault(); slot.classList.add('dropzone-hover'); };
+                slot.ondragleave = () => { slot.classList.remove('dropzone-hover'); };
+                slot.ondrop = (e) => {
+                    e.preventDefault();
+                    slot.classList.remove('dropzone-hover');
+                    if (draggedRankIdx !== null && draggedRankIdx !== idx) {
+                        const moved = currentRankItems.splice(draggedRankIdx, 1)[0];
+                        currentRankItems.splice(idx, 0, moved);
+                        draggedRankIdx = null;
+                        document.getElementById('rank-result-box').classList.add('hidden');
+                        renderRankSlots();
+                    }
+                };
+
+                slot.innerHTML = `
+                    <div class="mb-1">${badgeHTML}</div>
+                    <div class="my-2 text-indigo-900">
+                        ${renderFracHTML(item.n, item.d, 0, 'frac-lg')}
+                    </div>
+                    <div class="flex items-center gap-1.5 mt-1">
+                        <button onclick="moveRankCard(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} class="w-8 h-8 rounded-lg bg-white border border-slate-300 font-black text-slate-700 disabled:opacity-30 active:scale-90">◀</button>
+                        <button onclick="moveRankCard(${idx}, 1)" ${idx === 4 ? 'disabled' : ''} class="w-8 h-8 rounded-lg bg-white border border-slate-300 font-black text-slate-700 disabled:opacity-30 active:scale-90">▶</button>
+                    </div>
+                `;
+                container.appendChild(slot);
+            });
+        }
+
+        function checkRankAnswer() {
+            const sortedCorrect = [...currentRankItems].sort((a, b) => a.val - b.val);
+            const status = currentRankItems.map((item, idx) => Math.abs(item.val - sortedCorrect[idx].val) < 1e-9);
+            const allCorrect = status.every(Boolean);
+
+            renderRankSlots(status);
+
+            const resBox = document.getElementById('rank-result-box');
+            const resTitle = document.getElementById('rank-result-title');
+            const hintsGrid = document.getElementById('rank-hints-grid');
+
+            resBox.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-400', 'bg-rose-50', 'border-rose-400');
+            hintsGrid.innerHTML = '';
+
+            if (allCorrect) {
+                resBox.classList.add('bg-emerald-50', 'border-emerald-400');
+                resTitle.innerHTML = `<span class="text-emerald-800">🎉 完美過關！由小到大排列完全正確！看看每個分數的聰明算密碼：</span>`;
+                currentRankItems.forEach(item => {
+                    hintsGrid.innerHTML += `
+                        <div class="bg-white rounded-xl p-2 border border-emerald-200 text-center text-xs">
+                            <div class="font-black text-indigo-800 text-sm mb-0.5">${item.n}/${item.d}</div>
+                            <div class="text-slate-600">${item.hint}</div>
+                        </div>
+                    `;
+                });
+            } else {
+                resBox.classList.add('bg-rose-50', 'border-rose-400');
+                resTitle.innerHTML = `<span class="text-rose-800">💪 還有紅色框框的位置不對喔！提示：先找出「不到 1/2」和「超過 1/2」的分數分兩邊！</span>`;
+            }
+        }
+
+        /* =========================================================
+           關卡四：海島航線「動動腦」路線迷宮（無交叉俐落樹狀版）
+        ========================================================= */
+        const islandNodes = {
+            start:  { id: 'start',  label: '起點', x: 95,  y: 165, next: ['n_7_16', 'n_6_11'] },
+            n_7_16: { id: 'n_7_16', n: 7,  d: 16, val: 7/16, x: 245, y: 100, next: ['n_5_12', 'n_4_7'] },
+            n_6_11: { id: 'n_6_11', n: 6,  d: 11, val: 6/11, x: 245, y: 230, next: ['n_7_9', 'n_9_11'] },
+
+            n_5_12: { id: 'n_5_12', n: 5,  d: 12, val: 5/12, x: 395, y: 55,  next: ['n_3_8', 'n_5_9'] },
+            n_4_7:  { id: 'n_4_7',  n: 4,  d: 7,  val: 4/7,  x: 395, y: 128, next: ['n_5_9', 'n_15_13'] },
+            n_7_9:  { id: 'n_7_9',  n: 7,  d: 9,  val: 7/9,  x: 395, y: 202, next: ['n_15_13', 'n_13_11'] },
+            n_9_11: { id: 'n_9_11', n: 9,  d: 11, val: 9/11, x: 395, y: 275, next: ['n_15_13', 'n_13_11'] },
+
+            n_3_8:   { id: 'n_3_8',   n: 3,  d: 8,  val: 3/8,   x: 545, y: 55,  exit: 'A' },
+            n_5_9:   { id: 'n_5_9',   n: 5,  d: 9,  val: 5/9,   x: 545, y: 128, exit: 'B' },
+            n_15_13: { id: 'n_15_13', n: 15, d: 13, val: 15/13, x: 545, y: 202, exit: 'C' },
+            n_13_11: { id: 'n_13_11', n: 13, d: 11, val: 13/11, x: 545, y: 275, exit: 'D' }
+        };
+
+        const islandExits = [
+            { id: 'A', label: '出口 A', x: 675, y: 55 },
+            { id: 'B', label: '出口 B', x: 675, y: 128 },
+            { id: 'C', label: '出口 C', x: 675, y: 202 },
+            { id: 'D', label: '出口 D', x: 675, y: 275 }
+        ];
+
+        const mazeStepHints = {
+            'start': {
+                prompt: '第 1 站（起點分岔）：請比較 7/16 和 6/11，點擊比較大的分數航行！',
+                wrongTip: '🚧 觸礁提示：用「看有沒有超過一半」想想看！16 的一半是 8（7/16 不到一半），11 的一半是 5.5（6/11 超過一半）喔！',
+                rightTip: '✅ 航行正確！6/11 超過一半（5.5/11），7/16 不到一半（8/16），所以 6/11 > 7/16！'
+            },
+            'n_6_11': {
+                prompt: '第 2 站（從 6/11 分岔）：請比較 7/9 和 9/11，點擊比較大的分數航行！',
+                wrongTip: '🚧 觸礁提示：這兩個分數分子都比分母少 2！7/9 距離 1 差 2/9，9/11 距離 1 差 2/11，缺得越少越大喔！',
+                rightTip: '✅ 航行正確！9/11 距離 1 只差 2/11，7/9 距離 1 差 2/9，缺得比較少，所以 9/11 > 7/9！'
+            },
+            'n_9_11': {
+                prompt: '第 3 站（終極考驗）：請比較 15/13 和 13/11，點擊比較大的分數就能抵達出口！',
+                wrongTip: '🚧 觸礁提示：把假分數換成帶分數比比看！15/13 = 1又2/13，13/11 = 1又2/11，哪一個的分數部分比較大呢？',
+                rightTip: '🎉 太厲害了！13/11 = 1又2/11，15/13 = 1又2/13，同分子比較 2/11 > 2/13，成功抵達【出口 D】！'
+            }
+        };
+
+        let mazePathHistory = ['start'];
+        let mazeFinished = false;
+
+        function initMazeGame() {
+            mazePathHistory = ['start'];
+            mazeFinished = false;
+            document.getElementById('maze-step-badge').textContent = '進度：0 / 3 步';
+            document.getElementById('maze-instruction-text').textContent = mazeStepHints['start'].prompt;
+            document.getElementById('maze-feedback-box').classList.add('hidden');
+            renderIslandMaze();
+        }
+
+        function renderIslandMaze() {
+            const currentId = mazePathHistory[mazePathHistory.length - 1];
+            const currentNode = islandNodes[currentId];
+            const candidateIds = (!mazeFinished && currentNode.next) ? currentNode.next : [];
+
+            let pathsSVG = '';
+            Object.values(islandNodes).forEach(node => {
+                if (node.next) {
+                    node.next.forEach(targetId => {
+                        const target = islandNodes[targetId];
+                        pathsSVG += `<line x1="${node.x}" y1="${node.y}" x2="${target.x}" y2="${target.y}" stroke="#ffffff" stroke-width="14" stroke-linecap="round" opacity="0.9"/>`;
+                    });
+                }
+                if (node.exit) {
+                    const ex = islandExits.find(e => e.id === node.exit);
+                    pathsSVG += `<line x1="${node.x}" y1="${node.y}" x2="${ex.x}" y2="${ex.y}" stroke="#ffffff" stroke-width="14" stroke-linecap="round" opacity="0.9"/>`;
+                }
+            });
+
+            for (let i = 0; i < mazePathHistory.length - 1; i++) {
+                const n1 = islandNodes[mazePathHistory[i]];
+                const n2 = islandNodes[mazePathHistory[i + 1]];
+                pathsSVG += `<line x1="${n1.x}" y1="${n1.y}" x2="${n2.x}" y2="${n2.y}" stroke="#f59e0b" stroke-width="8" stroke-linecap="round"/>`;
+            }
+            if (mazeFinished && currentNode.exit) {
+                const ex = islandExits.find(e => e.id === currentNode.exit);
+                pathsSVG += `<line x1="${currentNode.x}" y1="${currentNode.y}" x2="${ex.x}" y2="${ex.y}" stroke="#f59e0b" stroke-width="8" stroke-linecap="round"/>`;
+            }
+
+            let exitsSVG = '';
+            islandExits.forEach(ex => {
+                const isReached = mazeFinished && currentNode.exit === ex.id;
+                const fillCol = isReached ? '#fde047' : '#fef08a';
+                const strokeCol = isReached ? '#ea580c' : '#eab308';
+                exitsSVG += `
+                    <g transform="translate(${ex.x - 48}, ${ex.y - 18})">
+                        <rect width="96" height="36" rx="18" fill="${fillCol}" stroke="${strokeCol}" stroke-width="${isReached ? 3.5 : 2}"/>
+                        <text x="34" y="23" text-anchor="middle" fill="#1e293b" font-size="14" font-weight="900">出口</text>
+                        <circle cx="72" cy="18" r="12" fill="#ffffff" stroke="#ca8a04" stroke-width="1.5"/>
+                        <text x="72" y="23" text-anchor="middle" fill="#1e293b" font-size="14" font-weight="900">${ex.id}</text>
+                    </g>
+                `;
+            });
+
+            let nodesSVG = '';
+            Object.values(islandNodes).forEach(node => {
+                if (node.id === 'start') return;
+                const isCandidate = candidateIds.includes(node.id);
+                const isVisited = mazePathHistory.includes(node.id);
+
+                let circleFill = '#ffffff';
+                let circleStroke = '#38bdf8';
+                let strokeW = 2.5;
+                let cursorClass = 'cursor-default';
+                let clickAttr = '';
+
+                if (isCandidate) {
+                    circleFill = '#fffbeb';
+                    circleStroke = '#f59e0b';
+                    strokeW = 4;
+                    cursorClass = 'cursor-pointer hover:opacity-90';
+                    clickAttr = `onclick="selectIslandNode('${node.id}')"`;
+                } else if (isVisited) {
+                    circleFill = '#fef3c7';
+                    circleStroke = '#d97706';
+                    strokeW = 3.5;
+                }
+
+                nodesSVG += `
+                    <g id="svg-node-${node.id}" ${clickAttr} class="${cursorClass}">
+                        ${isCandidate ? `<circle cx="${node.x}" cy="${node.y}" r="33" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="5,3"/>` : ''}
+                        <circle cx="${node.x}" cy="${node.y}" r="27" fill="${circleFill}" stroke="${circleStroke}" stroke-width="${strokeW}"/>
+                        <text x="${node.x}" y="${node.y - 5}" text-anchor="middle" fill="#0f172a" font-size="14" font-weight="900">${node.n}</text>
+                        <line x1="${node.x - 12}" y1="${node.y}" x2="${node.x + 12}" y2="${node.y}" stroke="#0f172a" stroke-width="2"/>
+                        <text x="${node.x}" y="${node.y + 15}" text-anchor="middle" fill="#0f172a" font-size="14" font-weight="900">${node.d}</text>
+                    </g>
+                `;
+            });
+
+            const boatX = currentNode.x;
+            const boatY = currentNode.y;
+            const boatSVG = `
+                <g transform="translate(${boatX - 46}, ${boatY - 22})" style="transition: all 0.5s ease;">
+                    <polygon points="8,24 84,24 74,40 18,40" fill="#a3e635" stroke="#4d7c0f" stroke-width="2"/>
+                    <rect x="26" y="10" width="28" height="14" rx="3" fill="#fef08a" stroke="#ca8a04" stroke-width="1.5"/>
+                    <circle cx="62" cy="14" r="8" fill="#38bdf8" stroke="#0369a1" stroke-width="1.5"/>
+                    <text x="46" y="36" text-anchor="middle" fill="#1a2e05" font-size="12" font-weight="900">${currentNode.id === 'start' ? '起點 ➔' : '⛵'}</text>
+                </g>
+            `;
+
+            document.getElementById('island-maze-wrapper').innerHTML = `
+                <svg viewBox="0 0 750 330" class="w-full h-auto rounded-2xl shadow-inner border border-sky-200 bg-[#dff2fe]">
+                    <path d="M 30 30 Q 180 5 380 20 T 720 35 L 735 295 Q 520 325 320 305 T 25 290 Z" fill="#cbeafe" opacity="0.7"/>
+                    <text x="150" y="275" fill="#7dd3fc" font-size="16">🐟 🐠</text>
+                    <text x="640" y="175" fill="#7dd3fc" font-size="16">🐟</text>
+                    ${pathsSVG}
+                    ${exitsSVG}
+                    ${nodesSVG}
+                    ${boatSVG}
+                </svg>
+            `;
+        }
+
+        function selectIslandNode(targetId) {
+            if (mazeFinished) return;
+            const currentId = mazePathHistory[mazePathHistory.length - 1];
+            const currentNode = islandNodes[currentId];
+            if (!currentNode || !currentNode.next || !currentNode.next.includes(targetId)) return;
+
+            const [opt1Id, opt2Id] = currentNode.next;
+            const opt1 = islandNodes[opt1Id];
+            const opt2 = islandNodes[opt2Id];
+            const largerId = opt1.val > opt2.val ? opt1Id : opt2Id;
+            const stepInfo = mazeStepHints[currentId];
+            const fb = document.getElementById('maze-feedback-box');
+
+            if (targetId === largerId) {
+                mazePathHistory.push(targetId);
+                const stepCount = mazePathHistory.length - 1;
+                document.getElementById('maze-step-badge').textContent = `進度：${stepCount} / 3 步`;
+
+                fb.classList.remove('hidden', 'bg-rose-50', 'border-rose-400', 'text-rose-900');
+                fb.classList.add('bg-emerald-50', 'border-emerald-400', 'text-emerald-900');
+                fb.textContent = stepInfo.rightTip;
+
+                const nextNode = islandNodes[targetId];
+                if (nextNode.exit) {
+                    mazeFinished = true;
+                    document.getElementById('maze-instruction-text').textContent = `🏆 航行成功！沿著較大的分數走，最後到達【出口 ${nextNode.exit}】！`;
+                } else {
+                    document.getElementById('maze-instruction-text').textContent = mazeStepHints[targetId].prompt;
+                }
+                renderIslandMaze();
+            } else {
+                fb.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-400', 'text-emerald-900');
+                fb.classList.add('bg-rose-50', 'border-rose-400', 'text-rose-900');
+                fb.textContent = stepInfo.wrongTip;
+            }
+        }
+
+        /* =========================================================
+           關卡五：課後小測驗
+        ========================================================= */
+        const quizData = {
+            part1: [
+                {
+                    id: 'q1_1',
+                    numLabel: '(1)',
+                    leftHTML: renderFracHTML(25, 6),
+                    rightHTML: renderFracHTML(34, 8),
+                    answer: '<',
+                    explanation: '先換成帶分數再約分：25/6 = 4又1/6；34/8 = 4又2/8 = 4又1/4。整數都是 4，因為 1/6 < 1/4，所以 25/6 < 34/8。'
+                },
+                {
+                    id: 'q1_2',
+                    numLabel: '(2)',
+                    leftHTML: renderFracHTML(26, 7),
+                    rightHTML: renderFracHTML(15, 24, 3),
+                    answer: '>',
+                    explanation: '26/7 換成帶分數是 3又5/7；3又15/24 約分後是 3又5/8。整數都是 3，同分子比較 5/7 > 5/8，所以 26/7 > 3又15/24。'
+                }
+            ],
+            part2: [
+                {
+                    id: 'q2_1',
+                    numLabel: '(1)',
+                    promptHTML: `一盒色紙有 24 張。<span class="underline decoration-2 underline-offset-4">小宇</span>有 ${renderFracHTML(5, 16)} 盒，<span class="underline decoration-2 underline-offset-4">小晴</span>有 ${renderFracHTML(1, 3)} 盒，誰的色紙比較<b>少</b>？`,
+                    options: [
+                        { val: '小宇', label: '小宇（5/16 盒）' },
+                        { val: '小晴', label: '小晴（1/3 盒）' },
+                        { val: '一樣多', label: '兩人一樣多' }
+                    ],
+                    answer: '小宇',
+                    explanation: '比較 5/16 和 1/3：可用同分子比較（1/3 = 5/15），因為 5/16 < 5/15，所以小宇的色紙比較少！'
+                },
+                {
+                    id: 'q2_2',
+                    numLabel: '(2)',
+                    promptHTML: `每個蔥油餅都一樣大。<span class="underline decoration-2 underline-offset-4">阿哲</span>吃掉 ${renderFracHTML(16, 7)} 個，<span class="underline decoration-2 underline-offset-4">佳佳</span>吃掉 ${renderFracHTML(1, 6, 2)} 個，誰吃掉的蔥油餅比較<b>多</b>？`,
+                    options: [
+                        { val: '阿哲', label: '阿哲（16/7 個）' },
+                        { val: '佳佳', label: '佳佳（2又1/6 個）' },
+                        { val: '一樣多', label: '兩人一樣多' }
+                    ],
+                    answer: '阿哲',
+                    explanation: '把假分數換成帶分數：16/7 = 2又2/7。比較 2又2/7 和 2又1/6：2/7 > 1/7 > 1/6，所以阿哲吃掉的比較多！'
+                }
+            ],
+            part3: [
+                { id: 'q3_1', numLabel: '(1)', leftHTML: renderFracHTML(1, 8), rightHTML: renderFracHTML(1, 11), answer: '>', explanation: '同分子都是 1，分母 8 < 11（平分越少份每份越大），所以 1/8 > 1/11。' },
+                { id: 'q3_2', numLabel: '(2)', leftHTML: renderFracHTML(1, 18), rightHTML: renderFracHTML(1, 14), answer: '<', explanation: '同分子都是 1，分母 18 > 14，平分越多份每份越小，所以 1/18 < 1/14。' },
+                { id: 'q3_3', numLabel: '(3)', leftHTML: renderFracHTML(15, 14), rightHTML: renderFracHTML(19, 18), answer: '>', explanation: '換成帶分數：15/14 = 1又1/14，19/18 = 1又1/18。整數都是 1，因為 1/14 > 1/18，所以 15/14 > 19/18。' },
+                { id: 'q3_4', numLabel: '(4)', leftHTML: renderFracHTML(13, 12), rightHTML: renderFracHTML(11, 10), answer: '<', explanation: '換成帶分數：13/12 = 1又1/12，11/10 = 1又1/10。整數都是 1，因為 1/12 < 1/10，所以 13/12 < 11/10。' },
+                { id: 'q3_5', numLabel: '(5)', leftHTML: renderFracHTML(6, 7), rightHTML: renderFracHTML(7, 8), answer: '<', explanation: '跟 1 比差距：6/7 距離 1 差 1/7，7/8 距離 1 差 1/8；缺得越少越大，所以 6/7 < 7/8。' },
+                { id: 'q3_6', numLabel: '(6)', leftHTML: renderFracHTML(6, 15, 1), rightHTML: renderFracHTML(14, 35, 1), answer: '=', explanation: '兩邊先約分看看！6/15 同除以 3 是 2/5；14/35 同除以 7 也是 2/5，兩邊都是 1又2/5，所以相等（＝）！' }
+            ]
+        };
+
+        let userQuizAnswers = {};
+        let quizSubmitted = false;
+
+        function initQuiz() {
+            userQuizAnswers = {};
+            quizSubmitted = false;
+            document.getElementById('quiz-score-badge').classList.add('hidden');
+            document.getElementById('quiz-summary-msg').classList.add('hidden');
+
+            document.getElementById('quiz-part-1').innerHTML = quizData.part1.map(q => renderSymbolQuestionCard(q)).join('');
+
+            document.getElementById('quiz-part-2').innerHTML = quizData.part2.map(q => `
+                <div id="card-${q.id}" class="bg-slate-50 rounded-2xl p-4 border-2 border-slate-200 flex flex-col justify-between space-y-3 transition">
+                    <div class="text-sm sm:text-base font-bold text-slate-800 leading-relaxed">
+                        <span class="font-black text-emerald-700 mr-1">${q.numLabel}</span>${q.promptHTML}
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        ${q.options.map(opt => `
+                            <button type="button" onclick="selectQuizOption('${q.id}', '${opt.val}')" id="opt-${q.id}-${opt.val}"
+                                class="quiz-opt-${q.id} bg-white hover:bg-emerald-50 border-2 border-slate-300 rounded-xl py-2 px-2.5 text-xs sm:text-sm font-black text-slate-700 transition">
+                                ${opt.label}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div id="exp-${q.id}" class="hidden text-xs sm:text-sm font-bold p-2.5 rounded-xl"></div>
+                </div>
+            `).join('');
+
+            document.getElementById('quiz-part-3').innerHTML = quizData.part3.map(q => renderSymbolQuestionCard(q)).join('');
+        }
+
+        function renderSymbolQuestionCard(q) {
+            return `
+                <div id="card-${q.id}" class="bg-slate-50 rounded-2xl p-3.5 border-2 border-slate-200 flex flex-col justify-between space-y-2.5 transition">
+                    <div class="flex items-center justify-between">
+                        <span class="font-black text-slate-500 text-sm">${q.numLabel}</span>
+                        <div class="flex items-center gap-2 text-slate-900">
+                            ${q.leftHTML}
+                            <span id="box-${q.id}" class="w-9 h-9 rounded-lg border-2 border-indigo-400 bg-white flex items-center justify-center text-xl font-black text-indigo-700 shadow-inner">？</span>
+                            ${q.rightHTML}
+                        </div>
+                        <span class="w-6"></span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 pt-1">
+                        ${['>', '<', '='].map(sym => `
+                            <button type="button" onclick="selectQuizOption('${q.id}', '${sym}')" id="opt-${q.id}-${sym}"
+                                class="quiz-opt-${q.id} bg-white hover:bg-indigo-50 border-2 border-slate-300 rounded-xl py-1.5 text-lg font-black text-slate-700 active:scale-95 transition">
+                                ${sym}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div id="exp-${q.id}" class="hidden text-xs font-bold p-2.5 rounded-xl leading-relaxed"></div>
+                </div>
+            `;
+        }
+
+        function selectQuizOption(qId, val) {
+            if (quizSubmitted) return;
+            userQuizAnswers[qId] = val;
+
+            const boxEl = document.getElementById(`box-${qId}`);
+            if (boxEl) {
+                boxEl.textContent = val;
+                boxEl.className = 'w-9 h-9 rounded-lg border-2 border-indigo-600 bg-indigo-50 flex items-center justify-center text-xl font-black text-indigo-800';
+            }
+
+            document.querySelectorAll(`.quiz-opt-${qId}`).forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow');
+                btn.classList.add('bg-white', 'text-slate-700', 'border-slate-300');
+            });
+            const selectedBtn = document.getElementById(`opt-${qId}-${val}`);
+            if (selectedBtn) {
+                selectedBtn.classList.remove('bg-white', 'text-slate-700', 'border-slate-300');
+                selectedBtn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow');
+            }
+        }
+
+        function submitQuiz() {
+            const allQuestions = [...quizData.part1, ...quizData.part2, ...quizData.part3];
+            const answeredCount = Object.keys(userQuizAnswers).length;
+            const summaryEl = document.getElementById('quiz-summary-msg');
+
+            if (answeredCount < allQuestions.length) {
+                summaryEl.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-900');
+                summaryEl.classList.add('bg-amber-100', 'text-amber-900', 'border', 'border-amber-300');
+                summaryEl.textContent = `⚠️ 還有 ${allQuestions.length - answeredCount} 題還沒作答喔！請全部點選後再交卷。`;
+                return;
+            }
+
+            quizSubmitted = true;
+            let correctCount = 0;
+
+            allQuestions.forEach(q => {
+                const userAns = userQuizAnswers[q.id];
+                const isRight = userAns === q.answer;
+                if (isRight) correctCount++;
+
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const expEl = document.getElementById(`exp-${q.id}`);
+                cardEl.classList.remove('border-slate-200', 'bg-slate-50');
+                expEl.classList.remove('hidden');
+
+                if (isRight) {
+                    cardEl.classList.add('border-emerald-500', 'bg-emerald-50/40');
+                    expEl.className = 'text-xs font-bold p-2.5 rounded-xl leading-relaxed bg-emerald-100 text-emerald-900';
+                    expEl.textContent = `✅ 答對了！${q.explanation}`;
+                } else {
+                    cardEl.classList.add('border-rose-500', 'bg-rose-50/40');
+                    expEl.className = 'text-xs font-bold p-2.5 rounded-xl leading-relaxed bg-rose-100 text-rose-900';
+                    expEl.textContent = `❌ 正確答案是「${q.answer}」。${q.explanation}`;
+                }
+            });
+
+            const score = correctCount * 10;
+            document.getElementById('quiz-score-val').textContent = score;
+            document.getElementById('quiz-score-badge').classList.remove('hidden');
+
+            summaryEl.classList.remove('hidden', 'bg-amber-100', 'text-amber-900', 'border-amber-300');
+            if (score === 100) {
+                summaryEl.classList.add('bg-emerald-100', 'text-emerald-900', 'border', 'border-emerald-300');
+                summaryEl.textContent = `🏆 太厲害了！10 題全部答對，獲得滿分 100 分！`;
+            } else {
+                summaryEl.classList.add('bg-sky-100', 'text-sky-900', 'border', 'border-sky-300');
+                summaryEl.textContent = `👏 交卷完成！你答對了 ${correctCount} / 10 題（${score} 分），請看看上方各題的紅色框解析喔！`;
+            }
+        }
+
+        function resetQuiz() {
+            initQuiz();
+        }
+
+        /* =========================================================
+           網頁載入初始化
+        ========================================================= */
+        window.onload = function() {
+            loadWarmup(0);
+            loadPreset(1, 5, 1, 3, 'ex1');
+            initSortGame();
+            loadRankLevel('basic');
+            initMazeGame();
+            initQuiz();
+        };
+    </script>
+</body>
+</html>
